@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meeting Status Dashboard</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      h1 {
+        color: white;
+        text-align: center;
+        margin-bottom: 40px;
+        font-size: 2.5em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+      }
+
+      .status-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+      }
+
+      .status-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .person-name {
+        font-size: 1.5em;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .status-display {
+        padding: 40px;
+        border-radius: 15px;
+        text-align: center;
+        font-size: 1.8em;
+        font-weight: bold;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+      }
+
+      .status-available {
+        background: #10b981;
+        color: white;
+      }
+
+      .status-meeting {
+        background: #ef4444;
+        color: white;
+      }
+
+      .status-dnd {
+        background: #f59e0b;
+        color: white;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .status-btn {
+        flex: 1;
+        min-width: 100px;
+        padding: 15px 20px;
+        border: none;
+        border-radius: 10px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: white;
+      }
+
+      .status-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .status-btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-available {
+        background: #10b981;
+      }
+
+      .btn-meeting {
+        background: #ef4444;
+      }
+
+      .btn-dnd {
+        background: #f59e0b;
+      }
+
+      .last-updated {
+        text-align: center;
+        color: white;
+        font-size: 0.9em;
+        margin-top: 20px;
+        opacity: 0.8;
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 1.8em;
+        }
+
+        .status-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .status-display {
+          font-size: 1.5em;
+          padding: 30px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏠 Meeting Status Dashboard</h1>
+
+      <div class="status-grid">
+        <div class="status-card">
+          <div class="person-name">Partner 1</div>
+          <div id="status1" class="status-display status-available">
+            Available
+          </div>
+          <div class="button-group">
+            <button
+              class="status-btn btn-available"
+              onclick="setStatus('person1', 'available')"
+            >
+              Available
+            </button>
+            <button
+              class="status-btn btn-meeting"
+              onclick="setStatus('person1', 'meeting')"
+            >
+              In Meeting
+            </button>
+            <button
+              class="status-btn btn-dnd"
+              onclick="setStatus('person1', 'dnd')"
+            >
+              Do Not Disturb
+            </button>
+          </div>
+        </div>
+
+        <div class="status-card">
+          <div class="person-name">Partner 2</div>
+          <div id="status2" class="status-display status-available">
+            Available
+          </div>
+          <div class="button-group">
+            <button
+              class="status-btn btn-available"
+              onclick="setStatus('person2', 'available')"
+            >
+              Available
+            </button>
+            <button
+              class="status-btn btn-meeting"
+              onclick="setStatus('person2', 'meeting')"
+            >
+              In Meeting
+            </button>
+            <button
+              class="status-btn btn-dnd"
+              onclick="setStatus('person2', 'dnd')"
+            >
+              Do Not Disturb
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="last-updated" id="lastUpdated">Last updated: Never</div>
+    </div>
+
+    <script>
+      const statusData = {
+        person1: { status: "available", label: "Available" },
+        person2: { status: "available", label: "Available" },
+      };
+
+      function setStatus(person, status) {
+        let label = "";
+        switch (status) {
+          case "available":
+            label = "Available";
+            break;
+          case "meeting":
+            label = "In Meeting";
+            break;
+          case "dnd":
+            label = "Do Not Disturb";
+            break;
+        }
+
+        statusData[person] = { status, label };
+        localStorage.setItem("meetingStatus", JSON.stringify(statusData));
+        updateDisplay();
+        updateTimestamp();
+      }
+
+      function updateDisplay() {
+        const status1El = document.getElementById("status1");
+        const status2El = document.getElementById("status2");
+
+        status1El.textContent = statusData.person1.label;
+        status1El.className = `status-display status-${statusData.person1.status}`;
+
+        status2El.textContent = statusData.person2.label;
+        status2El.className = `status-display status-${statusData.person2.status}`;
+      }
+
+      function updateTimestamp() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+        document.getElementById(
+          "lastUpdated"
+        ).textContent = `Last updated: ${timeString}`;
+      }
+
+      function loadStatus() {
+        const saved = localStorage.getItem("meetingStatus");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          statusData.person1 = parsed.person1 || statusData.person1;
+          statusData.person2 = parsed.person2 || statusData.person2;
+          updateDisplay();
+          updateTimestamp();
+        }
+      }
+
+      // Check for updates from other tabs/windows
+      window.addEventListener("storage", (e) => {
+        if (e.key === "meetingStatus") {
+          loadStatus();
+        }
+      });
+
+      // Poll for changes every 2 seconds
+      setInterval(loadStatus, 2000);
+
+      // Load initial status
+      loadStatus();
+    </script>
+  </body>
+</html>
