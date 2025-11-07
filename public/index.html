@@ -152,7 +152,7 @@
   </head>
   <body>
     <div class="container">
-      <h1>🏠 Meeting Status Dashboard</h1>
+      <h1>\U0001f3e0 Meeting Status Dashboard</h1>
 
       <div class="status-grid">
         <div class="status-card">
@@ -214,12 +214,14 @@
     </div>
 
     <script>
+      const API_URL = window.location.origin;
+
       const statusData = {
         person1: { status: "available", label: "Available" },
         person2: { status: "available", label: "Available" },
       };
 
-      function setStatus(person, status) {
+      async function setStatus(person, status) {
         let label = "";
         switch (status) {
           case "available":
@@ -233,10 +235,21 @@
             break;
         }
 
-        statusData[person] = { status, label };
-        localStorage.setItem("meetingStatus", JSON.stringify(statusData));
-        updateDisplay();
-        updateTimestamp();
+        try {
+          const response = await fetch(`${API_URL}/api/status/${person}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ status, label }),
+          });
+
+          if (response.ok) {
+            await loadStatus();
+          }
+        } catch (error) {
+          console.error("Error updating status:", error);
+        }
       }
 
       function updateDisplay() {
@@ -258,23 +271,20 @@
         ).textContent = `Last updated: ${timeString}`;
       }
 
-      function loadStatus() {
-        const saved = localStorage.getItem("meetingStatus");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          statusData.person1 = parsed.person1 || statusData.person1;
-          statusData.person2 = parsed.person2 || statusData.person2;
-          updateDisplay();
-          updateTimestamp();
+      async function loadStatus() {
+        try {
+          const response = await fetch(`${API_URL}/api/status`);
+          if (response.ok) {
+            const data = await response.json();
+            statusData.person1 = data.person1 || statusData.person1;
+            statusData.person2 = data.person2 || statusData.person2;
+            updateDisplay();
+            updateTimestamp();
+          }
+        } catch (error) {
+          console.error("Error loading status:", error);
         }
       }
-
-      // Check for updates from other tabs/windows
-      window.addEventListener("storage", (e) => {
-        if (e.key === "meetingStatus") {
-          loadStatus();
-        }
-      });
 
       // Poll for changes every 2 seconds
       setInterval(loadStatus, 2000);

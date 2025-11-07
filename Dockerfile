@@ -1,10 +1,20 @@
-FROM nginx:alpine
+FROM node:18-alpine
 
-# Copy the HTML file to nginx
-COPY index.html /usr/share/nginx/html/index.html
+# Set working directory
+WORKDIR /app
 
-# Expose port 72
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install --production
+
+# Copy server and frontend files
+COPY server.js ./
+COPY public ./public
+
+# Expose port 80
 EXPOSE 80
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start the server
+CMD ["node", "server.js"]
