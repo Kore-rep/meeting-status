@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  meeting-status:
+    build: .
+    container_name: meeting-status-dashboard
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - TZ=Africa/Johannesburg
